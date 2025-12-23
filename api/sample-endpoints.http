@@ -1,0 +1,5 @@
+### Tiles
+GET http://localhost:5000/tiles?siteId=1&bbox=0,0,100,100
+
+### Health
+GET http://localhost:5000/health
