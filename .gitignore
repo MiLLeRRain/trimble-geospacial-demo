@@ -1,5 +1,10 @@
 Dailyplan/
 Utils/.venv/
 Utils/sampledata/
+build/
+dist/
+*.egg-info/
+databricks/build/
+databricks/dist/
 
 Readme.md
