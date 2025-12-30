@@ -1,10 +1,17 @@
+%md
 # Spatial Indexing
 
-Strategy
+## Strategy
 - Discretize coordinates to tiles
-- Use (tileX, tileY) as spatial keys
-- Query by bbox -> tile range
+- Use `tileId` (format: `tileX_tileY`) as spatial key
+- Query by bbox → compute tile range → filter by `tileId`
 
-Notes
-- Use tile size consistent across pipeline
-- Avoid excessive partitions
+## Implementation
+- `tileId` = `"{tileX}_{tileY}"` (e.g., `"123_456"`)
+- Partition tables by `siteId` and `tileId`
+- Parse `tileX` and `tileY` from `tileId` when needed for spatial queries
+
+## Notes
+- Use tile size consistent across pipeline (default: 25m)
+- Avoid excessive partitions (balance between granularity and overhead)
+- `tileId` enables efficient spatial filtering and join operations
