@@ -1,5 +1,12 @@
-### Tiles
-GET http://localhost:5000/tiles?siteId=1&bbox=0,0,100,100
+@host = http://localhost:5080
+@apiKey = local-dev-key
 
-### Health
-GET http://localhost:5000/health
+GET {{host}}/health
+
+###
+GET {{host}}/internal/health/sql
+x-api-key: {{apiKey}}
+
+###
+GET {{host}}/internal/whoami
+x-api-key: {{apiKey}}
