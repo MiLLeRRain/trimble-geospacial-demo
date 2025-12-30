@@ -4,7 +4,6 @@ Utils/sampledata/
 build/
 dist/
 *.egg-info/
-databricks/build/
-databricks/dist/
+architecture/
 
 Readme.md
