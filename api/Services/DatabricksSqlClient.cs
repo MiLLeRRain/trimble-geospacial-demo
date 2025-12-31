@@ -48,9 +48,11 @@ public sealed class DatabricksSqlClient
     {
         var accessToken = await _credential.GetTokenAsync(new TokenRequestContext(new[] { _options.AadScope }), cancellationToken);
 
+        var warehouseId = _options.GetWarehouseId();
+
         var payload = new
         {
-            warehouse_id = _options.GetWarehouseId(),
+            warehouse_id = warehouseId,
             statement,
             wait_timeout = "30s",
             on_wait_timeout = "FAIL"
@@ -68,7 +70,23 @@ public sealed class DatabricksSqlClient
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Databricks statement execution failed with status {StatusCode}: {Body}", response.StatusCode, content);
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                _logger.LogWarning(
+                    "Databricks statement execution returned 403 Forbidden. WarehouseId={WarehouseId}. " +
+                    "This usually means the caller identity is not authorized to use the SQL warehouse (grant 'Can Use') " +
+                    "or the AAD principal is not provisioned in this workspace. Body={Body}",
+                    warehouseId,
+                    content);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Databricks statement execution failed with status {StatusCode}. WarehouseId={WarehouseId}. Body={Body}",
+                    response.StatusCode,
+                    warehouseId,
+                    content);
+            }
             throw new DatabricksSqlException("Databricks SQL execution failed.", response.StatusCode);
         }
 

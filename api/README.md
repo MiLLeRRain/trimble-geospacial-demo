@@ -39,6 +39,10 @@ Troubleshooting
 - If you see AADSTS500011 (invalid_resource) for Databricks:
    - Verify the App Service is authenticating against the correct Entra tenant (set AAD_TENANT_ID).
    - Prefer DATABRICKS_AAD_SCOPE = 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default.
+- If you see HTTP 403 Forbidden (User not authorized.) from /api/2.0/sql/statements:
+   - Ensure the caller identity exists as a Service Principal in the Databricks workspace.
+   - Ensure the Service Principal has the "Databricks SQL access" entitlement.
+   - Grant the Service Principal "Can Use" permission on the target SQL warehouse.
 
 Zip Deploy (simplest)
 1) dotnet publish -c Release -o publish

@@ -3,6 +3,7 @@ name: Deploy trimble-geospatial-api
 on:
   push:
     branches:
+      - master
       - main
     paths:
       - 'api/**'
