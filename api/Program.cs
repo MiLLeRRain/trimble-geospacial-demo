@@ -39,11 +39,17 @@ builder.Services.AddControllers();
 builder.Services.Configure<DatabricksOptions>(builder.Configuration.GetSection("Databricks"));
 builder.Services.Configure<InternalApiOptions>(builder.Configuration.GetSection("InternalApi"));
 
-var tenantId = builder.Configuration["AAD_TENANT_ID"];
+var tenantId = builder.Configuration["AAD_TENANT_ID"] ?? builder.Configuration["AZURE_TENANT_ID"];
 var credentialOptions = new DefaultAzureCredentialOptions();
 if (!string.IsNullOrWhiteSpace(tenantId))
 {
     credentialOptions.TenantId = tenantId;
+}
+
+var managedIdentityClientId = builder.Configuration["MANAGED_IDENTITY_CLIENT_ID"] ?? builder.Configuration["AZURE_CLIENT_ID"];
+if (!string.IsNullOrWhiteSpace(managedIdentityClientId))
+{
+    credentialOptions.ManagedIdentityClientId = managedIdentityClientId;
 }
 
 builder.Services.AddSingleton<TokenCredential>(_ => new DefaultAzureCredential(credentialOptions));

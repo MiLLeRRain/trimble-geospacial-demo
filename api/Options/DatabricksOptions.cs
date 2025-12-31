@@ -4,7 +4,9 @@ public sealed class DatabricksOptions
 {
     public string Host { get; init; } = "https://adb-7405613410614509.9.azuredatabricks.net";
     public string HttpPath { get; init; } = "/sql/1.0/warehouses/42237f5a0be62e4e";
-    public string AadScope { get; init; } = "https://databricks.azure.net/.default";
+    // More reliable than https://databricks.azure.net/.default across tenants.
+    // Azure Databricks first-party app id: 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d
+    public string AadScope { get; init; } = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default";
     public string? WarehouseId { get; init; }
 
     public Uri GetHostUri()
