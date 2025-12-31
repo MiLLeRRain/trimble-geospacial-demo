@@ -46,7 +46,7 @@ if (!string.IsNullOrWhiteSpace(tenantId))
     credentialOptions.TenantId = tenantId;
 }
 
-var managedIdentityClientId = builder.Configuration["MANAGED_IDENTITY_CLIENT_ID"] ?? builder.Configuration["AZURE_CLIENT_ID"];
+var managedIdentityClientId = builder.Configuration["MANAGED_IDENTITY_CLIENT_ID"];
 if (!string.IsNullOrWhiteSpace(managedIdentityClientId))
 {
     credentialOptions.ManagedIdentityClientId = managedIdentityClientId;
