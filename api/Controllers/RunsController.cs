@@ -5,6 +5,9 @@ using Trimble.Geospatial.Api.Services;
 
 namespace Trimble.Geospatial.Api.Controllers;
 
+/// <summary>
+/// Provides pipeline run status and metadata for a site.
+/// </summary>
 [ApiController]
 [Route("api/v1/sites/{siteId}/runs")]
 public sealed class RunsController : ControllerBase
@@ -19,7 +22,21 @@ public sealed class RunsController : ControllerBase
     }
 
     [HttpGet("latest")]
-    public async Task<IActionResult> GetLatest(string siteId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Get the latest pipeline run for a site.
+    /// </summary>
+    /// <remarks>
+    /// Returns status and timing details for the most recent processing run for the requested site.
+    /// </remarks>
+    /// <param name="siteId">Site identifier for the dataset.</param>
+    /// <response code="200">Latest pipeline run status.</response>
+    /// <response code="401">Missing or invalid API key.</response>
+    /// <response code="404">No runs exist for the site.</response>
+    /// <response code="503">Databricks SQL is temporarily unavailable.</response>
+    /// <response code="502">Databricks SQL query failed.</response>
+    public async Task<IActionResult> GetLatest(
+        string siteId,
+        CancellationToken cancellationToken)
     {
         const string queryName = "GetLatestPipelineRun";
 
@@ -40,7 +57,23 @@ public sealed class RunsController : ControllerBase
     }
 
     [HttpGet("{runId}")]
-    public async Task<IActionResult> GetById(string siteId, string runId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Get a pipeline run by ID.
+    /// </summary>
+    /// <remarks>
+    /// Returns status and timing details for a specific processing run.
+    /// </remarks>
+    /// <param name="siteId">Site identifier for the dataset.</param>
+    /// <param name="runId">Pipeline run identifier.</param>
+    /// <response code="200">Pipeline run status.</response>
+    /// <response code="401">Missing or invalid API key.</response>
+    /// <response code="404">The run ID does not exist for the site.</response>
+    /// <response code="503">Databricks SQL is temporarily unavailable.</response>
+    /// <response code="502">Databricks SQL query failed.</response>
+    public async Task<IActionResult> GetById(
+        string siteId,
+        string runId,
+        CancellationToken cancellationToken)
     {
         const string queryName = "GetPipelineRunById";
 

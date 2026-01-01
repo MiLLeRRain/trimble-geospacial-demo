@@ -1,13 +1,16 @@
 using System.Diagnostics;
+using System.Reflection;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Options;
 using Trimble.Geospatial.Api.Middleware;
 using Trimble.Geospatial.Api.Models;
 using Trimble.Geospatial.Api.Options;
 using Trimble.Geospatial.Api.Repositories;
 using Trimble.Geospatial.Api.Services;
+using Trimble.Geospatial.Api.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +45,57 @@ if (!string.IsNullOrWhiteSpace(publicApiKey))
 }
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Trimble Geospatial API",
+        Version = "v1",
+        Description = "Public API for pipeline runs, tile statistics, water bodies, and building candidates."
+    });
+
+    options.DocumentFilter<SwaggerTagsDocumentFilter>();
+    options.OperationFilter<SwaggerExamplesOperationFilter>();
+    options.OperationFilter<SwaggerResponsesOperationFilter>();
+    options.ParameterFilter<SwaggerParameterFilter>();
+    options.TagActionsBy(api =>
+    {
+        var controller = api.ActionDescriptor.RouteValues["controller"] ?? string.Empty;
+        return controller switch
+        {
+            "Runs" => new[] { "Runs" },
+            "Tiles" => new[] { "Tiles" },
+            "WaterBodies" => new[] { "Water Bodies" },
+            "BuildingCandidates" => new[] { "Building Candidates" },
+            _ => new[] { controller }
+        };
+    });
+
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
+    var apiKeyScheme = new OpenApiSecurityScheme
+    {
+        Description = "API key required for all endpoints. Provide the value in the x-api-key header.",
+        Name = "x-api-key",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey
+    };
+
+    options.AddSecurityDefinition("ApiKey", apiKeyScheme);
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            }] = Array.Empty<string>()
+    });
+});
 
 builder.Services.Configure<DatabricksOptions>(builder.Configuration.GetSection("Databricks"));
 builder.Services.Configure<InternalApiOptions>(builder.Configuration.GetSection("InternalApi"));
@@ -102,6 +156,13 @@ app.UseExceptionHandler(errorApp =>
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ApiKeyMiddleware>();
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Trimble Geospatial API v1");
+    options.DisplayRequestDuration();
+});
 
 app.MapControllers();
 

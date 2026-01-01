@@ -5,6 +5,9 @@ using Trimble.Geospatial.Api.Services;
 
 namespace Trimble.Geospatial.Api.Controllers;
 
+/// <summary>
+/// Provides water body features for a site.
+/// </summary>
 [ApiController]
 [Route("api/v1/sites/{siteId}/water-bodies")]
 public sealed class WaterBodiesController : ControllerBase
@@ -22,6 +25,21 @@ public sealed class WaterBodiesController : ControllerBase
     }
 
     [HttpGet]
+    /// <summary>
+    /// List water bodies for a site.
+    /// </summary>
+    /// <remarks>
+    /// Returns detected water body features and their bounding boxes for the site.
+    /// </remarks>
+    /// <param name="siteId">Site identifier for the dataset.</param>
+    /// <param name="minAreaM2">Minimum water body area in square meters.</param>
+    /// <param name="limit">Maximum number of items to return.</param>
+    /// <param name="orderBy">Sort order for the water bodies.</param>
+    /// <response code="200">Water bodies for the requested site.</response>
+    /// <response code="401">Missing or invalid API key.</response>
+    /// <response code="400">Invalid query parameter.</response>
+    /// <response code="503">Databricks SQL is temporarily unavailable.</response>
+    /// <response code="502">Databricks SQL query failed.</response>
     public async Task<IActionResult> GetList(
         string siteId,
         [FromQuery] double? minAreaM2 = null,
@@ -57,7 +75,24 @@ public sealed class WaterBodiesController : ControllerBase
     }
 
     [HttpGet("{waterBodyId}")]
-    public async Task<IActionResult> GetById(string siteId, string waterBodyId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Get a water body by ID.
+    /// </summary>
+    /// <remarks>
+    /// Returns a single water body feature for the site.
+    /// </remarks>
+    /// <param name="siteId">Site identifier for the dataset.</param>
+    /// <param name="waterBodyId">Water body identifier.</param>
+    /// <response code="200">Water body details.</response>
+    /// <response code="401">Missing or invalid API key.</response>
+    /// <response code="400">The waterBodyId path value is invalid.</response>
+    /// <response code="404">The water body was not found for the site.</response>
+    /// <response code="503">Databricks SQL is temporarily unavailable.</response>
+    /// <response code="502">Databricks SQL query failed.</response>
+    public async Task<IActionResult> GetById(
+        string siteId,
+        string waterBodyId,
+        CancellationToken cancellationToken)
     {
         if (!long.TryParse(waterBodyId, out var parsedId))
         {

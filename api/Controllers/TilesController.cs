@@ -5,6 +5,9 @@ using Trimble.Geospatial.Api.Services;
 
 namespace Trimble.Geospatial.Api.Controllers;
 
+/// <summary>
+/// Provides tile-level LiDAR statistics for a site.
+/// </summary>
 [ApiController]
 [Route("api/v1/sites/{siteId}/tiles")]
 public sealed class TilesController : ControllerBase
@@ -22,6 +25,23 @@ public sealed class TilesController : ControllerBase
     }
 
     [HttpGet]
+    /// <summary>
+    /// List tile statistics for a site.
+    /// </summary>
+    /// <remarks>
+    /// Returns per-tile point density and elevation distribution metrics for the site.
+    /// </remarks>
+    /// <param name="siteId">Site identifier for the dataset.</param>
+    /// <param name="skipMostlyWater">Exclude tiles that are mostly water.</param>
+    /// <param name="minPointCount">Minimum point count to include.</param>
+    /// <param name="limit">Maximum number of items to return.</param>
+    /// <param name="offset">Zero-based offset into the result set.</param>
+    /// <param name="orderBy">Sort order for the tile results.</param>
+    /// <response code="200">Tile statistics for the requested site.</response>
+    /// <response code="401">Missing or invalid API key.</response>
+    /// <response code="400">Invalid query parameter.</response>
+    /// <response code="503">Databricks SQL is temporarily unavailable.</response>
+    /// <response code="502">Databricks SQL query failed.</response>
     public async Task<IActionResult> GetTiles(
         string siteId,
         [FromQuery] bool skipMostlyWater = false,
