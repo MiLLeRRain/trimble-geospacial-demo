@@ -51,6 +51,8 @@ public sealed class TileStatsRepository
     {
         var builder = new StringBuilder(SelectSql);
 
+        builder.AppendLine();
+
         if (skipMostlyWater)
         {
             builder.AppendLine("  AND isMostlyWater = false");
