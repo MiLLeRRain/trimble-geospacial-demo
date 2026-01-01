@@ -17,3 +17,7 @@ Lidar was captured for Wellington City Council by Aerial Surveys between 2019 an
 Source: https://portal.opentopography.org/lidarDataset?opentopoID=OTLAS.092020.2193.1
 
 <img width="2545" height="1293" alt="image" src="https://github.com/user-attachments/assets/c71aee4a-eca5-4972-bfa3-0275df1c9ee5" />
+<img width="2340" height="1245" alt="image" src="https://github.com/user-attachments/assets/4d0b0d27-1d66-4e27-abcc-e992646df97a" />
+<img width="2338" height="898" alt="image" src="https://github.com/user-attachments/assets/b7c5dba1-8877-4e21-be47-53ee92c8c3ce" />
+<img width="483" height="827" alt="image" src="https://github.com/user-attachments/assets/89d1740b-8bad-4cc3-a180-95858f74e05e" />
+
