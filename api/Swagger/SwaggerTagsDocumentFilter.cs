@@ -20,7 +20,9 @@ public sealed class SwaggerTagsDocumentFilter : IDocumentFilter
             ["Runs"] = "Runs",
             ["Tiles"] = "Tiles",
             ["Water Bodies"] = "Water Bodies",
-            ["Building Candidates"] = "Building Candidates"
+            ["Building Candidates"] = "Building Candidates",
+            ["WaterBodies"] = "Water Bodies",
+            ["BuildingCandidates"] = "Building Candidates"
         };
 
         foreach (var path in swaggerDoc.Paths.Values)

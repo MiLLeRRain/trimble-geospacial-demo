@@ -1,54 +1,95 @@
-# API Boundary
+# Trimble Geospatial API
 
-Purpose
-- Thin serving layer over aggregated Delta tables
-- No direct access to raw point clouds
+## Overview
+The API is a thin, read-only serving layer over pre-aggregated Delta tables in
+Databricks. It does not ingest raw files or run long jobs. It validates request
+parameters, queries curated tables, and returns compact JSON payloads.
 
-Responsibilities
-- Validate query params (siteId, bbox, time)
-- Query pre-aggregated tables
-- Return small JSON payloads
+Base path: `/api/v1`
 
-Non-Goals
-- Uploading raw files
-- Long-running batch jobs
+## Authentication
+All endpoints require an API key in the `x-api-key` header.
 
-Deployment Guide
+## Swagger / OpenAPI
+- Local: `http://localhost:<port>/swagger`
+- Deployed: `https://<app>.azurewebsites.net/swagger`
+- JSON: `https://<app>.azurewebsites.net/swagger/v1/swagger.json`
 
-Env Settings (App Service Configuration -> Application settings)
-- DATABRICKS_HOST: https://adb-7405613410614509.9.azuredatabricks.net
-- DATABRICKS_HTTP_PATH: /sql/1.0/warehouses/42237f5a0be62e4e
-- DATABRICKS_AAD_SCOPE: optional override (recommended default)
-   - 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default
-- INTERNAL_API_KEY: set a strong secret used for /internal/* endpoints
-- AAD_TENANT_ID: optional, pins token issuance to a specific tenant (useful for AADSTS500011 / wrong-tenant issues)
-- MANAGED_IDENTITY_CLIENT_ID: optional, required if using a user-assigned managed identity
+## Endpoints (public)
+- Runs
+  - `GET /api/v1/sites/{siteId}/runs/latest`
+  - `GET /api/v1/sites/{siteId}/runs/{runId}`
+- Tiles
+  - `GET /api/v1/sites/{siteId}/tiles`
+- Water Bodies
+  - `GET /api/v1/sites/{siteId}/water-bodies`
+  - `GET /api/v1/sites/{siteId}/water-bodies/{waterBodyId}`
+- Building Candidates
+  - `GET /api/v1/sites/{siteId}/building-candidates`
+  - `GET /api/v1/sites/{siteId}/tiles/{tileId}/building-candidates/{candidateId}`
 
-Local Run (Windows / PowerShell)
-1) az login
-2) set environment variables and run:
-   - $env:INTERNAL_API_KEY = "<local-secret>"
-   - dotnet run
+## Error format
+All error responses share this schema:
+```json
+{
+  "errorCode": "string",
+  "message": "string",
+  "correlationId": "string"
+}
+```
 
-Azure App Service (Linux)
-1) Ensure System-assigned Managed Identity is enabled.
-2) Set Application settings (above).
-3) Deploy using zip deploy or GitHub Actions.
+## Data pipeline dependency (summary)
+The API serves outputs produced by the Databricks pipelines in
+`databricks/pipelines`:
+- `main.demo.tile_stats_v2`
+- `main.demo.features_water_bodies_v2`
+- `main.demo.features_building_candidates_v2`
+- `main.demo.pipeline_runs`
 
-Troubleshooting
-- If you see AADSTS500011 (invalid_resource) for Databricks:
-   - Verify the App Service is authenticating against the correct Entra tenant (set AAD_TENANT_ID).
-   - Prefer DATABRICKS_AAD_SCOPE = 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default.
-- If you see HTTP 403 Forbidden (User not authorized.) from /api/2.0/sql/statements:
-   - Ensure the caller identity exists as a Service Principal in the Databricks workspace.
-   - Ensure the Service Principal has the "Databricks SQL access" entitlement.
-   - Grant the Service Principal "Can Use" permission on the target SQL warehouse.
+For the full workflow description and job DAG, see the repo root `README.md`.
 
-Zip Deploy (simplest)
-1) dotnet publish -c Release -o publish
-2) Compress-Archive -Path publish\* -DestinationPath publish.zip -Force
-3) az webapp deploy --resource-group trimble-geospatial-demo-rg --name trimble-geospatial-api --src-path publish.zip --type zip
+## Deployment
 
-GitHub Actions
-1) Add secret AZURE_WEBAPP_PUBLISH_PROFILE with the Web App publish profile contents.
-2) Use .github/workflows/trimble-geospatial-api.yml
+### Env settings (App Service -> Application settings)
+- `DATABRICKS_HOST`: https://adb-7405613410614509.9.azuredatabricks.net
+- `DATABRICKS_HTTP_PATH`: /sql/1.0/warehouses/42237f5a0be62e4e
+- `DATABRICKS_AAD_SCOPE`: optional override (recommended default)
+  - `2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default`
+- `INTERNAL_API_KEY`: secret used for `/internal/*`
+- `PUBLIC_API_KEY`: optional (defaults to internal key if unset)
+- `AAD_TENANT_ID`: optional tenant override for AAD token issuance
+- `MANAGED_IDENTITY_CLIENT_ID`: required for user-assigned managed identity
+
+### Local run (Windows / PowerShell)
+```powershell
+az login
+$env:INTERNAL_API_KEY = "<local-secret>"
+dotnet run --project api/Trimble.Geospatial.Api.csproj
+```
+
+### Azure App Service (Linux)
+1) Enable System-assigned Managed Identity.
+2) Set application settings (above).
+3) Deploy via zip deploy or GitHub Actions.
+
+## Troubleshooting
+- AADSTS500011 (invalid_resource):
+  - Set `AAD_TENANT_ID` to the correct tenant.
+  - Prefer `DATABRICKS_AAD_SCOPE = 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default`.
+- 403 Forbidden from Databricks SQL:
+  - Register the service principal by **Application ID** (appid), not Object ID.
+  - Grant "Databricks SQL access" entitlement.
+  - Grant "Can Use" on the target SQL warehouse.
+
+## Deployment helpers
+
+### Zip deploy
+```powershell
+dotnet publish -c Release -o publish
+Compress-Archive -Path publish\* -DestinationPath publish.zip -Force
+az webapp deploy --resource-group trimble-geospatial-demo-rg --name trimble-geospatial-api --src-path publish.zip --type zip
+```
+
+### GitHub Actions
+1) Add secret `AZURE_WEBAPP_PUBLISH_PROFILE` with the Web App publish profile.
+2) Use `.github/workflows/trimble-geospatial-api.yml`.
