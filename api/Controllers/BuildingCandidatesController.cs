@@ -24,7 +24,6 @@ public sealed class BuildingCandidatesController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet]
     /// <summary>
     /// List building candidates for a site.
     /// </summary>
@@ -36,11 +35,13 @@ public sealed class BuildingCandidatesController : ControllerBase
     /// <param name="minHeight">Minimum height above ground in meters.</param>
     /// <param name="limit">Maximum number of items to return.</param>
     /// <param name="orderBy">Sort order for the building candidates.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Building candidates for the requested site.</response>
     /// <response code="401">Missing or invalid API key.</response>
     /// <response code="400">Invalid query parameter.</response>
     /// <response code="503">Databricks SQL is temporarily unavailable.</response>
     /// <response code="502">Databricks SQL query failed.</response>
+    [HttpGet]
     public async Task<IActionResult> GetList(
         string siteId,
         [FromQuery] string? tileId = null,
@@ -76,7 +77,6 @@ public sealed class BuildingCandidatesController : ControllerBase
         }
     }
 
-    [HttpGet("/api/v1/sites/{siteId}/tiles/{tileId}/building-candidates/{candidateId}")]
     /// <summary>
     /// Get a building candidate by ID.
     /// </summary>
@@ -86,11 +86,13 @@ public sealed class BuildingCandidatesController : ControllerBase
     /// <param name="siteId">Site identifier for the dataset.</param>
     /// <param name="tileId">Tile identifier within the site.</param>
     /// <param name="candidateId">Building candidate identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Building candidate details.</response>
     /// <response code="401">Missing or invalid API key.</response>
     /// <response code="404">The building candidate was not found for the site and tile.</response>
     /// <response code="503">Databricks SQL is temporarily unavailable.</response>
     /// <response code="502">Databricks SQL query failed.</response>
+    [HttpGet("/api/v1/sites/{siteId}/tiles/{tileId}/building-candidates/{candidateId}")]
     public async Task<IActionResult> GetById(
         string siteId,
         string tileId,

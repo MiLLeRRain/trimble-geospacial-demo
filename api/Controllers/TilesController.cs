@@ -24,7 +24,6 @@ public sealed class TilesController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet]
     /// <summary>
     /// List tile statistics for a site.
     /// </summary>
@@ -37,11 +36,13 @@ public sealed class TilesController : ControllerBase
     /// <param name="limit">Maximum number of items to return.</param>
     /// <param name="offset">Zero-based offset into the result set.</param>
     /// <param name="orderBy">Sort order for the tile results.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Tile statistics for the requested site.</response>
     /// <response code="401">Missing or invalid API key.</response>
     /// <response code="400">Invalid query parameter.</response>
     /// <response code="503">Databricks SQL is temporarily unavailable.</response>
     /// <response code="502">Databricks SQL query failed.</response>
+    [HttpGet]
     public async Task<IActionResult> GetTiles(
         string siteId,
         [FromQuery] bool skipMostlyWater = false,

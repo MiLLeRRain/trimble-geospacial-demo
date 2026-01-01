@@ -21,7 +21,6 @@ public sealed class RunsController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet("latest")]
     /// <summary>
     /// Get the latest pipeline run for a site.
     /// </summary>
@@ -29,11 +28,13 @@ public sealed class RunsController : ControllerBase
     /// Returns status and timing details for the most recent processing run for the requested site.
     /// </remarks>
     /// <param name="siteId">Site identifier for the dataset.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Latest pipeline run status.</response>
     /// <response code="401">Missing or invalid API key.</response>
     /// <response code="404">No runs exist for the site.</response>
     /// <response code="503">Databricks SQL is temporarily unavailable.</response>
     /// <response code="502">Databricks SQL query failed.</response>
+    [HttpGet("latest")]
     public async Task<IActionResult> GetLatest(
         string siteId,
         CancellationToken cancellationToken)
@@ -56,7 +57,6 @@ public sealed class RunsController : ControllerBase
         }
     }
 
-    [HttpGet("{runId}")]
     /// <summary>
     /// Get a pipeline run by ID.
     /// </summary>
@@ -65,11 +65,13 @@ public sealed class RunsController : ControllerBase
     /// </remarks>
     /// <param name="siteId">Site identifier for the dataset.</param>
     /// <param name="runId">Pipeline run identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <response code="200">Pipeline run status.</response>
     /// <response code="401">Missing or invalid API key.</response>
     /// <response code="404">The run ID does not exist for the site.</response>
     /// <response code="503">Databricks SQL is temporarily unavailable.</response>
     /// <response code="502">Databricks SQL query failed.</response>
+    [HttpGet("{runId}")]
     public async Task<IActionResult> GetById(
         string siteId,
         string runId,

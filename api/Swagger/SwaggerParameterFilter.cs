@@ -8,7 +8,10 @@ public sealed class SwaggerParameterFilter : IParameterFilter
 {
     public void Apply(OpenApiParameter parameter, ParameterFilterContext context)
     {
-        var path = context.ApiDescription.RelativePath ?? string.Empty;
+        var controllerTypeName = context.ParameterInfo?.Member?.DeclaringType?.Name ?? string.Empty;
+        var controllerName = controllerTypeName.EndsWith("Controller", StringComparison.OrdinalIgnoreCase)
+            ? controllerTypeName[..^"Controller".Length]
+            : controllerTypeName;
         var name = parameter.Name;
 
         switch (name)
@@ -44,7 +47,7 @@ public sealed class SwaggerParameterFilter : IParameterFilter
                 parameter.Schema.Minimum = 0;
                 break;
             case "limit":
-                ApplyLimit(parameter, path);
+                ApplyLimit(parameter, controllerName);
                 break;
             case "offset":
                 parameter.Description ??= "Zero-based offset into the result set.";
@@ -53,7 +56,7 @@ public sealed class SwaggerParameterFilter : IParameterFilter
                 parameter.Schema.Default = new OpenApiInteger(0);
                 break;
             case "orderBy":
-                ApplyOrderBy(parameter, path);
+                ApplyOrderBy(parameter, controllerName);
                 break;
             case "minAreaM2":
                 parameter.Description ??= "Minimum water body area in square meters.";
@@ -68,13 +71,13 @@ public sealed class SwaggerParameterFilter : IParameterFilter
         }
     }
 
-    private static void ApplyLimit(OpenApiParameter parameter, string path)
+    private static void ApplyLimit(OpenApiParameter parameter, string controllerName)
     {
         parameter.Description ??= "Maximum number of items to return.";
         parameter.Example = new OpenApiInteger(100);
         parameter.Schema.Minimum = 1;
 
-        if (path.Contains("/tiles", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(controllerName, "Tiles", StringComparison.OrdinalIgnoreCase))
         {
             parameter.Schema.Maximum = 2000;
             parameter.Schema.Default = new OpenApiInteger(100);
@@ -85,11 +88,11 @@ public sealed class SwaggerParameterFilter : IParameterFilter
         parameter.Schema.Default = new OpenApiInteger(100);
     }
 
-    private static void ApplyOrderBy(OpenApiParameter parameter, string path)
+    private static void ApplyOrderBy(OpenApiParameter parameter, string controllerName)
     {
         parameter.Description ??= "Sort order for the results.";
 
-        if (path.Contains("/tiles", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(controllerName, "Tiles", StringComparison.OrdinalIgnoreCase))
         {
             parameter.Schema.Enum = new List<IOpenApiAny>
             {
@@ -104,7 +107,7 @@ public sealed class SwaggerParameterFilter : IParameterFilter
             return;
         }
 
-        if (path.Contains("/water-bodies", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(controllerName, "WaterBodies", StringComparison.OrdinalIgnoreCase))
         {
             parameter.Schema.Enum = new List<IOpenApiAny>
             {
@@ -114,7 +117,7 @@ public sealed class SwaggerParameterFilter : IParameterFilter
             return;
         }
 
-        if (path.Contains("/building-candidates", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(controllerName, "BuildingCandidates", StringComparison.OrdinalIgnoreCase))
         {
             parameter.Schema.Enum = new List<IOpenApiAny>
             {
