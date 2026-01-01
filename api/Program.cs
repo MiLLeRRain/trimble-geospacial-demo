@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Trimble.Geospatial.Api.Middleware;
 using Trimble.Geospatial.Api.Models;
 using Trimble.Geospatial.Api.Options;
+using Trimble.Geospatial.Api.Repositories;
 using Trimble.Geospatial.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,10 +35,17 @@ if (!string.IsNullOrWhiteSpace(internalApiKey))
     builder.Configuration["InternalApi:ApiKey"] = internalApiKey;
 }
 
+var publicApiKey = builder.Configuration["PUBLIC_API_KEY"];
+if (!string.IsNullOrWhiteSpace(publicApiKey))
+{
+    builder.Configuration["PublicApi:ApiKey"] = publicApiKey;
+}
+
 builder.Services.AddControllers();
 
 builder.Services.Configure<DatabricksOptions>(builder.Configuration.GetSection("Databricks"));
 builder.Services.Configure<InternalApiOptions>(builder.Configuration.GetSection("InternalApi"));
+builder.Services.Configure<PublicApiOptions>(builder.Configuration.GetSection("PublicApi"));
 
 var tenantId = builder.Configuration["AAD_TENANT_ID"] ?? builder.Configuration["AZURE_TENANT_ID"];
 var credentialOptions = new DefaultAzureCredentialOptions();
@@ -62,6 +70,9 @@ builder.Services.AddHttpClient<DatabricksSqlClient>((sp, client) =>
 });
 
 builder.Services.AddScoped<SqlHealthService>();
+builder.Services.AddScoped<DatabricksSqlQueryExecutor>();
+builder.Services.AddScoped<PipelineRunRepository>();
+builder.Services.AddScoped<TileStatsRepository>();
 
 var app = builder.Build();
 

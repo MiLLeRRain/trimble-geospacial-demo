@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -27,7 +28,7 @@ public sealed class DatabricksSqlClient
 
     public async Task<int> ExecuteScalarIntAsync(string statement, CancellationToken cancellationToken)
     {
-        var response = await ExecuteStatementAsync(statement, cancellationToken);
+        var response = await ExecuteStatementAsync(statement, null, cancellationToken);
         var row = ExtractFirstRow(response);
 
         if (row.Length == 0 || !int.TryParse(row[0], out var value))
@@ -40,23 +41,34 @@ public sealed class DatabricksSqlClient
 
     public async Task<string[]> ExecuteRowAsync(string statement, CancellationToken cancellationToken)
     {
-        var response = await ExecuteStatementAsync(statement, cancellationToken);
+        var response = await ExecuteStatementAsync(statement, null, cancellationToken);
         return ExtractFirstRow(response);
     }
 
-    private async Task<DatabricksStatementResponse> ExecuteStatementAsync(string statement, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string[]>> ExecuteRowsAsync(string statement, IReadOnlyCollection<DatabricksSqlParameter>? parameters, CancellationToken cancellationToken)
+    {
+        var response = await ExecuteStatementAsync(statement, parameters, cancellationToken);
+        return ExtractRows(response);
+    }
+
+    private async Task<DatabricksStatementResponse> ExecuteStatementAsync(string statement, IReadOnlyCollection<DatabricksSqlParameter>? parameters, CancellationToken cancellationToken)
     {
         var accessToken = await _credential.GetTokenAsync(new TokenRequestContext(new[] { _options.AadScope }), cancellationToken);
 
         var warehouseId = _options.GetWarehouseId();
 
-        var payload = new
+        var payload = new Dictionary<string, object?>
         {
-            warehouse_id = warehouseId,
-            statement,
-            wait_timeout = "30s",
-            on_wait_timeout = "FAIL"
+            ["warehouse_id"] = warehouseId,
+            ["statement"] = statement,
+            ["wait_timeout"] = "30s",
+            ["on_wait_timeout"] = "FAIL"
         };
+
+        if (parameters is { Count: > 0 })
+        {
+            payload["parameters"] = parameters;
+        }
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/2.0/sql/statements/")
         {
@@ -70,24 +82,12 @@ public sealed class DatabricksSqlClient
 
         if (!response.IsSuccessStatusCode)
         {
-            if (response.StatusCode == HttpStatusCode.Forbidden)
-            {
-                _logger.LogWarning(
-                    "Databricks statement execution returned 403 Forbidden. WarehouseId={WarehouseId}. " +
-                    "This usually means the caller identity is not authorized to use the SQL warehouse (grant 'Can Use') " +
-                    "or the AAD principal is not provisioned in this workspace. Body={Body}",
-                    warehouseId,
-                    content);
-            }
-            else
-            {
-                _logger.LogWarning(
-                    "Databricks statement execution failed with status {StatusCode}. WarehouseId={WarehouseId}. Body={Body}",
-                    response.StatusCode,
-                    warehouseId,
-                    content);
-            }
-            throw new DatabricksSqlException("Databricks SQL execution failed.", response.StatusCode);
+            _logger.LogWarning(
+                "Databricks statement execution failed with status {StatusCode}. WarehouseId={WarehouseId}. Body={Body}",
+                response.StatusCode,
+                warehouseId,
+                content);
+            throw new DatabricksSqlException("Databricks SQL execution failed.", response.StatusCode, isTransient: IsTransientStatus(response.StatusCode));
         }
 
         var statementResponse = JsonSerializer.Deserialize<DatabricksStatementResponse>(content, JsonOptions);
@@ -106,7 +106,7 @@ public sealed class DatabricksSqlClient
         return statementResponse;
     }
 
-    private static string[] ExtractFirstRow(DatabricksStatementResponse response)
+    private static IReadOnlyList<string[]> ExtractRows(DatabricksStatementResponse response)
     {
         if (response.Result is null || response.Result.DataArray.ValueKind == JsonValueKind.Undefined)
         {
@@ -114,24 +114,49 @@ public sealed class DatabricksSqlClient
         }
 
         var rows = response.Result.DataArray;
-        if (rows.ValueKind != JsonValueKind.Array || rows.GetArrayLength() == 0)
+        if (rows.ValueKind != JsonValueKind.Array)
+        {
+            throw new DatabricksSqlException("Databricks response result shape is invalid.", HttpStatusCode.BadGateway);
+        }
+
+        var results = new List<string[]>(rows.GetArrayLength());
+        foreach (var row in rows.EnumerateArray())
+        {
+            if (row.ValueKind != JsonValueKind.Array)
+            {
+                throw new DatabricksSqlException("Databricks response row shape is invalid.", HttpStatusCode.BadGateway);
+            }
+
+            var values = new string[row.GetArrayLength()];
+            for (var i = 0; i < values.Length; i++)
+            {
+                var value = row[i];
+                values[i] = value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.ToString();
+            }
+
+            results.Add(values);
+        }
+
+        return results;
+    }
+
+    private static string[] ExtractFirstRow(DatabricksStatementResponse response)
+    {
+        var rows = ExtractRows(response);
+        if (rows.Count == 0)
         {
             throw new DatabricksSqlException("Databricks response returned no rows.", HttpStatusCode.BadGateway);
         }
 
-        var firstRow = rows[0];
-        if (firstRow.ValueKind != JsonValueKind.Array)
-        {
-            throw new DatabricksSqlException("Databricks response row shape is invalid.", HttpStatusCode.BadGateway);
-        }
+        return rows[0];
+    }
 
-        var values = new string[firstRow.GetArrayLength()];
-        for (var i = 0; i < values.Length; i++)
-        {
-            var value = firstRow[i];
-            values[i] = value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.ToString();
-        }
-
-        return values;
+    private static bool IsTransientStatus(HttpStatusCode statusCode)
+    {
+        return statusCode is HttpStatusCode.RequestTimeout
+            or HttpStatusCode.TooManyRequests
+            or HttpStatusCode.BadGateway
+            or HttpStatusCode.ServiceUnavailable
+            or HttpStatusCode.GatewayTimeout;
     }
 }
