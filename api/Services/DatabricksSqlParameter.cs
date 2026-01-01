@@ -62,4 +62,5 @@ public sealed class DatabricksSqlParameter
             Type = "DOUBLE"
         };
     }
+
 }

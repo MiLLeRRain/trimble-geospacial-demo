@@ -74,6 +74,7 @@ builder.Services.AddScoped<DatabricksSqlQueryExecutor>();
 builder.Services.AddScoped<PipelineRunRepository>();
 builder.Services.AddScoped<TileStatsRepository>();
 builder.Services.AddScoped<WaterBodyRepository>();
+builder.Services.AddScoped<BuildingCandidateRepository>();
 
 var app = builder.Build();
 
