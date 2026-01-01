@@ -52,4 +52,14 @@ public sealed class DatabricksSqlParameter
             Type = "BOOLEAN"
         };
     }
+
+    public static DatabricksSqlParameter Double(string name, double value)
+    {
+        return new DatabricksSqlParameter
+        {
+            Name = name,
+            Value = value,
+            Type = "DOUBLE"
+        };
+    }
 }
