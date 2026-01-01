@@ -1,0 +1,403 @@
+{
+	"info": {
+		"_postman_id": "665a8166-9610-4425-beaa-61fb9e0f091b",
+		"name": "trimble-geospatial-demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19581136"
+	},
+	"item": [
+		{
+			"name": "health",
+			"item": [
+				{
+					"name": "health - api",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "health - internal",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "whoami - internal",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "debug",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "tile-stats",
+			"item": [
+				{
+					"name": "tiles",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "tiles - skipMostlyWater",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "tiles - orderBy - paging",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "tiles - orderBy",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "pipelineruns",
+			"item": [
+				{
+					"name": "latest",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "latestByRunsId",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "water-bodies",
+			"item": [
+				{
+					"name": "get water body invalid id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/water-bodies/not-a-number",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"water-bodies",
+								"not-a-number"
+							]
+						},
+						"description": "Attempt to get water body with invalid id"
+					},
+					"response": []
+				},
+				{
+					"name": "get water body by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/water-bodies/218",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"water-bodies",
+								"218"
+							]
+						},
+						"description": "Get a single water body by id"
+					},
+					"response": []
+				},
+				{
+					"name": "list water bodies ordered",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/water-bodies?orderBy=areaDesc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"water-bodies"
+							],
+							"query": [
+								{
+									"key": "orderBy",
+									"value": "areaDesc"
+								}
+							]
+						},
+						"description": "List water bodies ordered by area descending"
+					},
+					"response": []
+				},
+				{
+					"name": "list water bodies filtered",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/water-bodies?minAreaM2=100&limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"water-bodies"
+							],
+							"query": [
+								{
+									"key": "minAreaM2",
+									"value": "100"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "List water bodies filtered by minimum area and limit"
+					},
+					"response": []
+				},
+				{
+					"name": "list water bodies",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/water-bodies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"water-bodies"
+							]
+						},
+						"description": "List all water bodies for site wellington_cbd"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "building-candidates",
+			"item": [
+				{
+					"name": "List building candidates invalid orderBy",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/building-candidates?orderBy=unknown",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"building-candidates"
+							],
+							"query": [
+								{
+									"key": "orderBy",
+									"value": "unknown"
+								}
+							]
+						},
+						"description": "List building candidates using an invalid orderBy value"
+					},
+					"response": []
+				},
+				{
+					"name": "Get building candidate by tile and id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/tiles/0_62/building-candidates/0_62|4_3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"tiles",
+								"0_62",
+								"building-candidates",
+								"0_62|4_3"
+							]
+						},
+						"description": "Get a single building candidate by tile and id"
+					},
+					"response": []
+				},
+				{
+					"name": "List building candidates by tile and minHeight",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/building-candidates?tileId=0_62&minHeight=5.0&orderBy=heightRangeDesc&limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"building-candidates"
+							],
+							"query": [
+								{
+									"key": "tileId",
+									"value": "0_62"
+								},
+								{
+									"key": "minHeight",
+									"value": "5.0"
+								},
+								{
+									"key": "orderBy",
+									"value": "heightRangeDesc"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "List building candidates filtered by tileId and minHeight"
+					},
+					"response": []
+				},
+				{
+					"name": "List building candidates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sites/wellington_cbd/building-candidates",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sites",
+								"wellington_cbd",
+								"building-candidates"
+							]
+						},
+						"description": "List all building candidates for the wellington_cbd site"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
