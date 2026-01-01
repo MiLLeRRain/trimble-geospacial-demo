@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Reflection;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Diagnostics;
@@ -50,30 +49,14 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Trimble Geospatial API",
+        Title = "Trimble Geospatial Demo API",
         Version = "v1",
         Description = "Public API for pipeline runs, tile statistics, water bodies, and building candidates."
     });
 
     options.DocumentFilter<SwaggerTagsDocumentFilter>();
     options.OperationFilter<SwaggerExamplesOperationFilter>();
-    options.OperationFilter<SwaggerResponsesOperationFilter>();
     options.ParameterFilter<SwaggerParameterFilter>();
-    options.TagActionsBy(api =>
-    {
-        var controller = api.ActionDescriptor.RouteValues["controller"] ?? string.Empty;
-        return controller switch
-        {
-            "Runs" => new[] { "Runs" },
-            "Tiles" => new[] { "Tiles" },
-            "WaterBodies" => new[] { "Water Bodies" },
-            "BuildingCandidates" => new[] { "Building Candidates" },
-            _ => new[] { controller }
-        };
-    });
-
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
     var apiKeyScheme = new OpenApiSecurityScheme
     {
