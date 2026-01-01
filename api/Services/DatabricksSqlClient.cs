@@ -77,6 +77,8 @@ public sealed class DatabricksSqlClient
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
 
+        _logger.LogDebug("Databricks payload: {Payload}", JsonSerializer.Serialize(payload, JsonOptions));
+
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
