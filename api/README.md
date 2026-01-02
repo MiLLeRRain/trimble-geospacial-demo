@@ -74,7 +74,6 @@ dotnet run --project api/Trimble.Geospatial.Api.csproj
 
 ## Troubleshooting
 - AADSTS500011 (invalid_resource):
-  - Set `AAD_TENANT_ID` to the correct tenant.
   - Prefer `DATABRICKS_AAD_SCOPE = 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default`.
 - 403 Forbidden from Databricks SQL:
   - Register the service principal by **Application ID** (appid), not Object ID.
@@ -82,13 +81,6 @@ dotnet run --project api/Trimble.Geospatial.Api.csproj
   - Grant "Can Use" on the target SQL warehouse.
 
 ## Deployment helpers
-
-### Zip deploy
-```powershell
-dotnet publish -c Release -o publish
-Compress-Archive -Path publish\* -DestinationPath publish.zip -Force
-az webapp deploy --resource-group trimble-geospatial-demo-rg --name trimble-geospatial-api --src-path publish.zip --type zip
-```
 
 ### GitHub Actions
 1) Add secret `AZURE_WEBAPP_PUBLISH_PROFILE` with the Web App publish profile.
