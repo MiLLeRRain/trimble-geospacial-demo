@@ -398,6 +398,37 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "jobs",
+			"item": [
+				{
+					"name": "job db smoke test (insert then select)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{apikey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/jobs/_test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"jobs",
+								"_test"
+							]
+						},
+						"description": "Insert one row into dbo.Jobs then select it back (verifies Job DB connectivity via AAD Default / Managed Identity)."
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
