@@ -55,6 +55,10 @@ For the full workflow description and job DAG, see the repo root `README.md`.
 - `DATABRICKS_HTTP_PATH`: /sql/1.0/warehouses/42237f5a0be62e4e
 - `DATABRICKS_AAD_SCOPE`: optional override (recommended default)
   - `2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default`
+- `JobDb__Server`: Azure SQL Server FQDN
+  - `trimble-geospatial-demo-sql.database.windows.net`
+- `JobDb__Database`: Azure SQL database name
+  - `trimble-geospatial-demo-sql`
 - `INTERNAL_API_KEY`: secret used for `/internal/*`
 - `PUBLIC_API_KEY`: optional (defaults to internal key if unset)
 - `AAD_TENANT_ID`: optional tenant override for AAD token issuance

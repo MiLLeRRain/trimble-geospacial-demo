@@ -89,6 +89,13 @@ builder.Services.AddOptions<DatabricksOptions>()
 builder.Services.Configure<InternalApiOptions>(builder.Configuration.GetSection("InternalApi"));
 builder.Services.Configure<PublicApiOptions>(builder.Configuration.GetSection("PublicApi"));
 
+builder.Services.AddOptions<JobDbOptions>()
+    .Bind(builder.Configuration.GetSection("JobDb"))
+    .ValidateDataAnnotations()
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Server), "JobDb:Server must be configured.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Database), "JobDb:Database must be configured.")
+    .ValidateOnStart();
+
 var tenantId = builder.Configuration["AAD_TENANT_ID"] ?? builder.Configuration["AZURE_TENANT_ID"];
 var credentialOptions = new DefaultAzureCredentialOptions();
 if (!string.IsNullOrWhiteSpace(tenantId))
@@ -117,6 +124,7 @@ builder.Services.AddScoped<PipelineRunRepository>();
 builder.Services.AddScoped<TileStatsRepository>();
 builder.Services.AddScoped<WaterBodyRepository>();
 builder.Services.AddScoped<BuildingCandidateRepository>();
+builder.Services.AddScoped<JobDbTestRepository>();
 
 var app = builder.Build();
 

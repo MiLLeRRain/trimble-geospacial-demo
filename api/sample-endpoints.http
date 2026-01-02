@@ -10,3 +10,7 @@ x-api-key: {{apiKey}}
 ###
 GET {{host}}/internal/whoami
 x-api-key: {{apiKey}}
+
+### Job DB smoke test (insert then select)
+POST {{host}}/api/v1/jobs/_test
+x-api-key: {{apiKey}}
