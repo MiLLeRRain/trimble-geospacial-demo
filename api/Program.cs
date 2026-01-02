@@ -80,7 +80,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.Configure<DatabricksOptions>(builder.Configuration.GetSection("Databricks"));
+builder.Services.AddOptions<DatabricksOptions>()
+    .Bind(builder.Configuration.GetSection("Databricks"))
+    .ValidateDataAnnotations()
+    .Validate(options => options.GetHostUri() is not null, "Databricks Host must be a valid absolute URI.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.GetWarehouseId()), "Databricks HttpPath must include a warehouse id.")
+    .ValidateOnStart();
 builder.Services.Configure<InternalApiOptions>(builder.Configuration.GetSection("InternalApi"));
 builder.Services.Configure<PublicApiOptions>(builder.Configuration.GetSection("PublicApi"));
 

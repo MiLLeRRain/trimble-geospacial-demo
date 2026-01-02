@@ -1,12 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Trimble.Geospatial.Api.Options;
 
 public sealed class DatabricksOptions
 {
-    public string Host { get; init; } = "https://adb-7405613410614509.9.azuredatabricks.net";
-    public string HttpPath { get; init; } = "/sql/1.0/warehouses/42237f5a0be62e4e";
-    // More reliable than https://databricks.azure.net/.default across tenants.
-    // Azure Databricks first-party app id: 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d
-    public string AadScope { get; init; } = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default";
+    [Required]
+    public string Host { get; init; } = string.Empty;
+    [Required]
+    public string HttpPath { get; init; } = string.Empty;
+    [Required]
+    public string AadScope { get; init; } = string.Empty;
     public string? WarehouseId { get; init; }
 
     public Uri GetHostUri()
