@@ -124,7 +124,7 @@ builder.Services.AddScoped<PipelineRunRepository>();
 builder.Services.AddScoped<TileStatsRepository>();
 builder.Services.AddScoped<WaterBodyRepository>();
 builder.Services.AddScoped<BuildingCandidateRepository>();
-builder.Services.AddScoped<JobDbTestRepository>();
+builder.Services.AddScoped<JobDbRepository>();
 
 var app = builder.Build();
 

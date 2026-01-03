@@ -8,10 +8,10 @@ namespace Trimble.Geospatial.Api.Controllers;
 [Route("api/v1/jobs")]
 public sealed class JobsController : ControllerBase
 {
-    private readonly JobDbTestRepository _repo;
+    private readonly JobDbRepository _repo;
     private readonly ILogger<JobsController> _logger;
 
-    public JobsController(JobDbTestRepository repo, ILogger<JobsController> logger)
+    public JobsController(JobDbRepository repo, ILogger<JobsController> logger)
     {
         _repo = repo;
         _logger = logger;
@@ -23,7 +23,7 @@ public sealed class JobsController : ControllerBase
     {
         try
         {
-            var result = await _repo.InsertAndSelectAsync(cancellationToken);
+            var result = await _repo.SmokeTestInsertAndSelectAsync(cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)

@@ -6,6 +6,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{D82C56D6-B2C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trimble.Geospatial.Api", "api\Trimble.Geospatial.Api.csproj", "{7F9D0072-D01E-B7C7-3967-60332C16DA03}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trimble.Geospatial.Demo.Functions", "functions\Trimble.Geospatial.Demo.Functions\Trimble.Geospatial.Demo.Functions.csproj", "{8F8DE50F-7B2A-4E5D-90A9-41B3F2084A0B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,6 +18,10 @@ Global
 		{7F9D0072-D01E-B7C7-3967-60332C16DA03}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F9D0072-D01E-B7C7-3967-60332C16DA03}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F9D0072-D01E-B7C7-3967-60332C16DA03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F8DE50F-7B2A-4E5D-90A9-41B3F2084A0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F8DE50F-7B2A-4E5D-90A9-41B3F2084A0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F8DE50F-7B2A-4E5D-90A9-41B3F2084A0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F8DE50F-7B2A-4E5D-90A9-41B3F2084A0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
