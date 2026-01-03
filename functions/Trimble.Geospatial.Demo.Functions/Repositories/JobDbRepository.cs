@@ -37,10 +37,10 @@ public sealed class JobDbRepository
 
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
-+UPDATE dbo.Jobs
-+SET Status = @Status,
-+    UpdatedAtUtc = SYSUTCDATETIME()
-+WHERE JobId = @JobId;";
+UPDATE dbo.Jobs
+SET Status = @Status,
+    UpdatedAtUtc = SYSUTCDATETIME()
+WHERE JobId = @JobId;";
 
         cmd.Parameters.AddWithValue("@JobId", jobId);
         cmd.Parameters.AddWithValue("@Status", newStatus);
