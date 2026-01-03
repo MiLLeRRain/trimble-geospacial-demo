@@ -106,6 +106,52 @@ flowchart LR
   C --> QAPI
 ```
 
+### Permissions (high level)
+This is a simplified view of the identities involved, plus the auth mechanism used in this repo:
+
+- Client -> API: API key via `x-api-key` header (see `ApiKeyMiddleware`).
+- API -> Job DB (Azure SQL): `Authentication=Active Directory Default` (uses App Service Managed Identity in Azure; local dev uses your signed-in developer identity).
+- API -> ADLS/Blob: issues short-lived write SAS.
+  - Preferred: User Delegation SAS via `DefaultAzureCredential` (Managed Identity in Azure).
+  - Fallback: storage account key (`STORAGE_ACCOUNT_KEY`) if User Delegation SAS is unavailable.
+- API -> Service Bus: Shared Access Signature (SAS) via connection string (`SERVICEBUS__CONNECTION`).
+
+Note: the sequence diagram shows JWT/OIDC as a possible client auth flow, but the current API implementation uses `x-api-key`.
+
+```mermaid
+flowchart TB
+  %% Principals
+  Client["Client (User)"]
+  ApiMI["API App Service Identity"]
+  FuncMI["Orchestrator Function Identity"]
+  DbxId["Databricks Identity (SPN / Workspace Identity)"]
+
+  %% Resources
+  AAD["Entra ID"]
+  Storage["ADLS Gen2 / Blob Storage"]
+  Sql["Job Metadata DB (Azure SQL)"]
+  ServiceBus["Service Bus (job-init)"]
+  Databricks["Azure Databricks Jobs API"]
+  Unity["Unity Catalog / Delta Tables"]
+
+  %% Auth / permissions
+  Client -- "(optional) OIDC login" --> AAD
+  Client -- "API key (x-api-key)" --> ApiMI
+
+  ApiMI -- "Generate SAS (scoped TTL)" --> Storage
+  Client -- "Upload via SAS" --> Storage
+
+  ApiMI -- "Read/write job status" --> Sql
+  ApiMI -- "Send job-init" --> ServiceBus
+
+  FuncMI -- "Listen job-init" --> ServiceBus
+  FuncMI -- "Update runId/status" --> Sql
+  FuncMI -- "Run Now" --> Databricks
+
+  DbxId -- "Read raw" --> Storage
+  DbxId -- "Write tables" --> Unity
+```
+
 ## Databricks job flow (overview)
 All processing runs in Databricks using notebooks in `databricks/pipelines`. The
 workflow is designed as a DAG in Databricks Workflows and runs in this order:
@@ -200,4 +246,3 @@ All endpoints require an API key in the `x-api-key` header.
 <img width="2545" height="1293" alt="image" src="https://github.com/user-attachments/assets/c71aee4a-eca5-4972-bfa3-0275df1c9ee5" />
 <img width="2340" height="1245" alt="image" src="https://github.com/user-attachments/assets/4d0b0d27-1d66-4e27-abcc-e992646df97a" />
 <img width="2338" height="898" alt="image" src="https://github.com/user-attachments/assets/b7c5dba1-8877-4e21-be47-53ee92c8c3ce" />
-<img width="483" height="827" alt="image" src="https://github.com/user-attachments/assets/89d1740b-8bad-4cc3-a180-95858f74e05e" />

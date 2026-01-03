@@ -9,6 +9,7 @@ namespace Trimble.Geospatial.Api.Controllers;
 
 [ApiController]
 [Route("v1/uploads")]
+[Produces("application/json")]
 public sealed class UploadsController : ControllerBase
 {
     private readonly UploadRepository _repository;
@@ -32,10 +33,17 @@ public sealed class UploadsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateUploadSession([FromBody] UploadSessionRequest request, CancellationToken cancellationToken)
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(UploadSessionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CreateUploadSession(
+        [FromBody] UploadSessionRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken)
     {
         var correlationId = HttpContext.GetCorrelationId();
-        var idempotencyKey = Request.Headers["Idempotency-Key"].FirstOrDefault();
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             return BadRequest(ApiError.From("MissingIdempotencyKey", "Idempotency-Key header is required.", correlationId));
@@ -90,7 +98,16 @@ public sealed class UploadsController : ControllerBase
     }
 
     [HttpPost("{uploadId}/complete")]
-    public async Task<IActionResult> CompleteUpload([FromRoute] string uploadId, [FromBody] UploadCompleteRequest? request, CancellationToken cancellationToken)
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(UploadStatusResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CompleteUpload(
+        [FromRoute] string uploadId,
+        [FromBody] UploadCompleteRequest? request,
+        CancellationToken cancellationToken)
     {
         var correlationId = HttpContext.GetCorrelationId();
         var upload = await _repository.GetUploadWithJobAsync(uploadId, cancellationToken);
