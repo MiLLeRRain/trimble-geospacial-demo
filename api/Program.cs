@@ -43,6 +43,42 @@ if (!string.IsNullOrWhiteSpace(publicApiKey))
     builder.Configuration["PublicApi:ApiKey"] = publicApiKey;
 }
 
+var storageAccountName = builder.Configuration["STORAGE_ACCOUNT_NAME"];
+if (!string.IsNullOrWhiteSpace(storageAccountName))
+{
+    builder.Configuration["Storage:AccountName"] = storageAccountName;
+}
+
+var storageContainerName = builder.Configuration["STORAGE_CONTAINER_NAME"];
+if (!string.IsNullOrWhiteSpace(storageContainerName))
+{
+    builder.Configuration["Storage:ContainerName"] = storageContainerName;
+}
+
+var storageEndpoint = builder.Configuration["STORAGE_ENDPOINT"];
+if (!string.IsNullOrWhiteSpace(storageEndpoint))
+{
+    builder.Configuration["Storage:Endpoint"] = storageEndpoint;
+}
+
+var storageAccountKey = builder.Configuration["STORAGE_ACCOUNT_KEY"];
+if (!string.IsNullOrWhiteSpace(storageAccountKey))
+{
+    builder.Configuration["Storage:AccountKey"] = storageAccountKey;
+}
+
+var serviceBusConnection = builder.Configuration["SERVICEBUS__CONNECTION"] ?? builder.Configuration["SERVICEBUS:CONNECTION"];
+if (!string.IsNullOrWhiteSpace(serviceBusConnection))
+{
+    builder.Configuration["ServiceBus:ConnectionString"] = serviceBusConnection;
+}
+
+var serviceBusQueue = builder.Configuration["SERVICEBUS__QUEUE_NAME"] ?? builder.Configuration["SERVICEBUS:QUEUE_NAME"];
+if (!string.IsNullOrWhiteSpace(serviceBusQueue))
+{
+    builder.Configuration["ServiceBus:QueueName"] = serviceBusQueue;
+}
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -95,6 +131,18 @@ builder.Services.AddOptions<JobDbOptions>()
     .Validate(options => !string.IsNullOrWhiteSpace(options.Server), "JobDb:Server must be configured.")
     .Validate(options => !string.IsNullOrWhiteSpace(options.Database), "JobDb:Database must be configured.")
     .ValidateOnStart();
+builder.Services.AddOptions<StorageOptions>()
+    .Bind(builder.Configuration.GetSection("Storage"))
+    .ValidateDataAnnotations()
+    .Validate(options => !string.IsNullOrWhiteSpace(options.AccountName), "Storage:AccountName must be configured.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ContainerName), "Storage:ContainerName must be configured.")
+    .ValidateOnStart();
+builder.Services.AddOptions<ServiceBusOptions>()
+    .Bind(builder.Configuration.GetSection("ServiceBus"))
+    .ValidateDataAnnotations()
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ConnectionString), "ServiceBus:ConnectionString must be configured.")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.QueueName), "ServiceBus:QueueName must be configured.")
+    .ValidateOnStart();
 
 var tenantId = builder.Configuration["AAD_TENANT_ID"] ?? builder.Configuration["AZURE_TENANT_ID"];
 var credentialOptions = new DefaultAzureCredentialOptions();
@@ -125,6 +173,14 @@ builder.Services.AddScoped<TileStatsRepository>();
 builder.Services.AddScoped<WaterBodyRepository>();
 builder.Services.AddScoped<BuildingCandidateRepository>();
 builder.Services.AddScoped<JobDbRepository>();
+builder.Services.AddScoped<UploadRepository>();
+builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
+builder.Services.AddSingleton(sp =>
+{
+    var opts = sp.GetRequiredService<IOptions<ServiceBusOptions>>().Value;
+    return new Azure.Messaging.ServiceBus.ServiceBusClient(opts.ConnectionString);
+});
+builder.Services.AddSingleton<IJobInitPublisher, ServiceBusJobInitPublisher>();
 
 var app = builder.Build();
 

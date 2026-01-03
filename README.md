@@ -24,6 +24,88 @@ Metadata and licensing:
 
 Source: https://portal.opentopography.org/lidarDataset?opentopoID=OTLAS.092020.2193.1
 
+## Upload api architecture
+
+This diagram shows the end-to-end ingestion path for a single LAZ upload:
+
+- The client requests an upload session from the API and uploads directly to ADLS via SAS.
+- When the client marks the upload complete, the API validates the blob, records status in the Job DB, and enqueues a `job_init` message.
+- A Function/worker consumes the queue message and triggers the Databricks job, which reads raw data from staging and writes Delta tables to Unity Catalog.
+- The client polls the API for job status.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Client as Client
+  participant AAD as Azure AD
+  participant API as Upload&Job API (.NET 6)
+  participant DB as Job Metadata DB
+  participant STG as Blob/ADLS Staging
+  participant SB as Service Bus
+  participant ORCH as Orchestrator (Function/Worker)
+  participant DBX as Databricks Jobs API
+  participant DL as Delta/Unity Catalog
+
+  Client->>AAD: Login / get access token (JWT)
+  Client->>API: POST /v1/uploads (JWT)
+  API->>DB: Create job + upload session (CREATED)
+  API->>STG: Generate SAS (scoped path, TTL)
+  API-->>Client: {uploadUrl(SAS), uploadId, jobId, expiresAt}
+
+  Client->>STG: Upload LAZ via SAS (direct PUT/blocks)
+  Client->>API: POST /v1/uploads/{uploadId}/complete
+  API->>STG: Validate blob exists (etag/size optional)
+  API->>DB: Update status -> UPLOADED -> QUEUED
+  API->>SB: Send message {jobId, stagingUri, ...}
+
+  ORCH->>SB: Receive job_init message
+  ORCH->>DB: Update status -> DBX_TRIGGERED
+  ORCH->>DBX: run-now(jobId, stagingUri, siteId, scanId)
+  DBX-->>ORCH: runId
+  ORCH->>DB: Persist runId
+
+  DBX->>STG: Read LAZ raw
+  DBX->>DL: Process + write Delta tables
+  DBX-->>ORCH: Completion (or ORCH polls run status)
+  ORCH->>DB: Update status -> SUCCEEDED/FAILED
+
+  Client->>API: GET /v1/jobs/{jobId}
+  API->>DB: Read job status + pointers
+  API-->>Client: status, runId, error, result pointers
+```
+
+```mermaid
+flowchart LR
+  %% Clients & Identity
+  C[Client App] -->|OAuth2 / OIDC| AAD[Azure AD / Entra ID]
+  C -->|JWT Bearer| API[Upload & Job API]
+
+  %% Data & Metadata
+  API -->|Create Upload Session| JDB[(Job Metadata DB)]
+  API -->|Generate SAS write-only| STG[(Blob/ADLS Gen2)]
+  C -->|Direct upload via SAS| STG
+
+  %% Complete + Queue
+  C -->|Complete upload| API
+  API -->|Verify blob exists| STG
+  API -->|Enqueue job_init msg| SB[(Azure Service Bus Queue/Topic)]
+
+  %% Orchestration -> Databricks
+  SB -->|Consume job_init| ORCH[Job Orchestrator]
+  ORCH -->|Update status: DBX_TRIGGERED| JDB
+  ORCH -->|Run-now| DBX[Azure Databricks Jobs API]
+
+  %% Processing & Output
+  DBX -->|Read raw LAZ from staging| STG
+  DBX -->|Write processed tables| DL[(Delta Lake / Unity Catalog)]
+  DBX -->|Emit completion event or Orchestrator polls run state| ORCH
+  ORCH -->|Update status: SUCCEEDED/FAILED| JDB
+
+  %% Query results (optional extension)
+  QAPI[Query API] --> DL
+  C --> QAPI
+```
+
 ## Databricks job flow (overview)
 All processing runs in Databricks using notebooks in `databricks/pipelines`. The
 workflow is designed as a DAG in Databricks Workflows and runs in this order:
