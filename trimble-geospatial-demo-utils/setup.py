@@ -8,5 +8,5 @@ setup(
     packages=["trimble_geospatial_demo_utils"],
     package_dir={"trimble_geospatial_demo_utils": "."},
     python_requires=">=3.8",
-    install_requires=[],
+    install_requires=["requests>=2.0.0"],
 )
