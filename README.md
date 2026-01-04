@@ -243,6 +243,11 @@ All endpoints require an API key in the `x-api-key` header.
 - `data-model/`, `architecture/`, `decisions/`: design docs and references
 
 ## Images
+### Azure resource group
+![trimble-geospatial-demo-rg](docs/trimble-geospatial-demo-rg.svg)
+
+### Azure Databricks
+
 <img width="2545" height="1293" alt="image" src="https://github.com/user-attachments/assets/c71aee4a-eca5-4972-bfa3-0275df1c9ee5" />
 <img width="2340" height="1245" alt="image" src="https://github.com/user-attachments/assets/4d0b0d27-1d66-4e27-abcc-e992646df97a" />
 <img width="2338" height="898" alt="image" src="https://github.com/user-attachments/assets/b7c5dba1-8877-4e21-be47-53ee92c8c3ce" />
