@@ -152,6 +152,65 @@ flowchart TB
   DbxId -- "Write tables" --> Unity
 ```
 
+### Job state machine (6-line)
+
+| Current state | Trigger | Next state | Key idempotency / constraints |
+| --- | --- | --- | --- |
+| — | `POST /uploads` (new `Idempotency-Key`) | `CREATED` | `Idempotency-Key` must be unique; duplicate request returns the same job |
+| `CREATED` | `POST /uploads/{uploadId}/complete` and blob exists | `QUEUED` | Only allow `CREATED → QUEUED`; duplicate `complete` returns success without changing state |
+| `QUEUED` | Orchestrator consumes message and successfully claims | `DBX_TRIGGERED` | Atomic `UPDATE ... WHERE status=QUEUED`; trigger exactly once |
+| `DBX_TRIGGERED` | Databricks `run_id` persisted successfully | `PROCESSING` | `run_id` written once; retries must not overwrite |
+| `PROCESSING` | Databricks webhook on-success | `SUCCEEDED` | Terminal state; duplicate webhooks ignored |
+| `PROCESSING` | Databricks webhook on-failure | `FAILED` | Terminal state; record `errorCode` / `errorMessage` |
+
+One-liner you can memorize:
+
+`CREATED → QUEUED → DBX_TRIGGERED → PROCESSING → SUCCEEDED/FAILED` (messages + webhooks are at-least-once, but state transitions are atomic so the overall behavior is exactly-once)
+
+```mermaid
+flowchart LR
+  Start[POST /uploads] --> Created[CREATED]
+  Created -- "complete + blob exists" --> Queued[QUEUED]
+  Queued -- "orchestrator claims (atomic update)" --> Triggered[DBX_TRIGGERED]
+  Triggered -- "persist run_id (write once)" --> Processing[PROCESSING]
+  Processing -- "webhook success" --> Succeeded[SUCCEEDED]
+  Processing -- "webhook failure" --> Failed[FAILED]
+```
+
+### Identity × Resource × Role matrix
+
+| Identity | Resource | RBAC role | Purpose |
+| --- | --- | --- | --- |
+| GitHub CI Service Principal | Resource Group | `Contributor` (or split into `Website Contributor` + least privilege) | Deploy API / Function / infrastructure |
+| GitHub CI Service Principal | App Service | `Website Contributor` | Publish Web App |
+| GitHub CI Service Principal | Function App | `Website Contributor` | Publish Function |
+| GitHub CI Service Principal | Azure Container Registry | `AcrPush` | Push Docker images |
+| GitHub CI Service Principal | Key Vault | `Key Vault Secrets User` | Read deployment secrets |
+| API App Service (Managed Identity) | Azure SQL DB | `db_datareader` / `db_datawriter` (AAD user in DB) | Write Job / Upload status |
+| API App Service (Managed Identity) | Blob Storage | `Storage Blob Data Contributor` | Generate SAS / validate blobs |
+| API App Service (Managed Identity) | Service Bus | `Service Bus Data Sender` | Send `job_init` messages |
+| API App Service (Managed Identity) | Key Vault | `Key Vault Secrets User` | Read configuration |
+| Orchestrator Function (Managed Identity) | Azure SQL DB | `db_datareader` / `db_datawriter` (AAD user in DB) | Update Job status |
+| Orchestrator Function (Managed Identity) | Service Bus | `Service Bus Data Receiver` | Consume `job_init` |
+| Orchestrator Function (Managed Identity) | Databricks Workspace | "Can Run" (workspace/job permissions) | Trigger Databricks jobs |
+| Orchestrator Function (Managed Identity) | Key Vault | `Key Vault Secrets User` | Read webhook secret |
+| Databricks Job / Webhook | Function HTTP endpoint | HMAC shared secret (non-RBAC) | Callback job completion status |
+
+### UI vs CLI RBAC equivalence
+
+What you do in the Azure Portal:
+
+`Access control (IAM) → Add role assignment`
+
+Is equivalent to the CLI:
+
+```bash
+az role assignment create \
+  --assignee <principalId> \
+  --role "<roleName>" \
+  --scope <resourceScope>
+```
+
 ## Databricks job flow (overview)
 All processing runs in Databricks using notebooks in `databricks/pipelines`. The
 workflow is designed as a DAG in Databricks Workflows and runs in this order:
